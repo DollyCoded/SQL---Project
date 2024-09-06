@@ -1,86 +1,59 @@
-# Data Cleaning Project in SQL
+# Nashville Housing Data Cleaning Project
 
-This project demonstrates various data cleaning techniques using SQL to prepare a Nashville Housing dataset for analysis. The goal is to standardize, normalize, and refine the data to ensure accuracy and completeness.
+This project focuses on cleaning and transforming a dataset of Nashville housing data using SQL. The aim is to standardize the data format, handle missing values, split addresses into components, normalize field values, and remove duplicates to prepare the dataset for further analysis.
 
-## Standardizing the Date Format
+## Key Data Cleaning Steps
 
-- **Purpose:**
-  - Ensure that all dates in the dataset are in a consistent format. This is crucial for reliable analysis, sorting, filtering, and joining with other datasets that may use date fields.
+### 1. Standardizing the Date Format
 
-- **Method:**
-  - Use the SQL `CONVERT` function to change the `SaleDate` field to a standard date format.
-  - If the direct update fails due to data type constraints, a new column (`SaleDateConverted`) is created to store the formatted date values.
+- **Purpose:** Ensure all dates are in a consistent format to facilitate analysis.
+- **Method:** Use the `CONVERT` function to change the `SaleDate` field to a standard date format.
+- **Fallback:** If the direct update fails, add a new column (`SaleDateConverted`) and store the converted date values there.
 
-- **Note:**
-  - Ensure that the `SaleDate` field is of the correct data type (`Date` or `Datetime`). The data may contain inconsistencies or formatting issues that need additional handling.
+### 2. Populating Missing Property Address Data
 
-## Populating Missing Property Address Data
+- **Purpose:** Fill in missing values in the `PropertyAddress` field using existing data.
+- **Method:** Perform a self-join on the `ParcelID` to find matching records with non-null addresses and update the missing addresses accordingly.
 
-- **Purpose:**
-  - Fill in missing values in the `PropertyAddress` field to improve data completeness and accuracy. Missing address data can negatively affect analyses that rely on location-based metrics or mapping.
+### 3. Breaking Out Address into Individual Columns
 
-- **Method:**
-  - Use SQL `JOIN` to find and replace null values in `PropertyAddress` by matching `ParcelID` between records.
-  - The `ISNULL` function is used to substitute missing values with available data from related records.
+- **Purpose:** Split the `PropertyAddress` and `OwnerAddress` fields into separate components such as Address, City, and State.
+- **Method:** Use string manipulation functions (`SUBSTRING` and `PARSENAME`) to extract individual components and create new columns (`PropertySplitAddress`, `PropertySplitCity`, `OwnerSplitAddress`, `OwnerSplitCity`, `OwnerSplitState`).
 
-- **Note:**
-  - Ensuring that all property addresses are correctly populated helps maintain the integrity of location-based analyses.
+### 4. Normalizing Boolean Fields
 
-## Breaking Out Address into Individual Columns
+- **Purpose:** Standardize the values in the `SoldAsVacant` field from 'Y'/'N' to 'Yes'/'No'.
+- **Method:** Apply a `CASE` statement to transform the field values accordingly.
 
-- **Purpose:**
-  - Separate the `PropertyAddress` into individual columns for street address, city, and state to allow for more granular analysis and filtering.
+### 5. Removing Duplicate Records
 
-- **Method:**
-  - Use SQL string functions (`SUBSTRING` and `CHARINDEX`) to extract and populate `PropertySplitAddress`, `PropertySplitCity`, and other columns.
-  - Similar logic is applied to `OwnerAddress` to break it into `OwnerSplitAddress`, `OwnerSplitCity`, and `OwnerSplitState`.
+- **Purpose:** Identify and remove duplicate records to ensure data quality.
+- **Method:** Use a Common Table Expression (CTE) with the `ROW_NUMBER` window function to assign a row number to each record, partitioned by key fields (`ParcelID`, `PropertyAddress`, `SalePrice`, `SaleDate`, `LegalReference`). Delete records with a row number greater than 1.
 
-- **Note:**
-  - This step helps in geospatial analysis, creating visualizations, and ensuring more accessible data manipulation.
+### 6. Deleting Unused Columns
 
-## Changing Y/N to Yes/No in "Sold As Vacant" Field
+- **Purpose:** Clean up the dataset by removing columns that are no longer necessary for analysis.
+- **Method:** Use the `ALTER TABLE` statement to drop redundant columns such as `OwnerAddress`, `TaxDistrict`, `PropertyAddress`, and `SaleDate`.
 
-- **Purpose:**
-  - Convert ambiguous binary indicators (`Y`/`N`) in the `SoldAsVacant` field to more meaningful values (`Yes`/`No`).
+## Additional Steps for Data Import
 
-- **Method:**
-  - Use a `CASE` statement to update all instances where `SoldAsVacant` is `Y` to `Yes` and `N` to `No`.
+### Importing Data using `OPENROWSET` and `BULK INSERT`
 
-- **Note:**
-  - Improves data readability and consistency for users and downstream systems.
+- **Purpose:** Load data from external files (like CSV or Excel) directly into the SQL database.
+- **Method:** Configure the SQL server to allow `OPENROWSET` and `BULK INSERT`. Utilize these commands to import data from specified file paths.
+- **Note:** Proper server configuration is required, including setting permissions and enabling necessary options.
 
-## Removing Duplicates
+## Summary
 
-- **Purpose:**
-  - Identify and remove duplicate records to ensure data accuracy and avoid double-counting in analyses.
+This project demonstrates various SQL data cleaning techniques, such as standardizing date formats, handling missing data, splitting address fields, normalizing field values, and removing duplicates. The cleaned dataset is now ready for more detailed analysis, such as property sales trends, market evaluations, and other real estate insights.
 
-- **Method:**
-  - Use a Common Table Expression (CTE) with the `ROW_NUMBER` window function to identify duplicate rows based on key fields (`ParcelID`, `PropertyAddress`, `SalePrice`, etc.).
-  - Select only unique records for further analysis.
+## Next Steps
 
-- **Note:**
-  - Removing duplicates ensures the dataset remains accurate and reliable for analytical purposes.
+- Use the cleaned dataset for analysis and visualization in tools like Power BI or Tableau.
+- Explore further optimization and automation of data cleaning processes using advanced SQL features or other ETL tools.
+- Share insights and findings based on the cleaned dataset to stakeholders or in reports.
 
-## Deleting Unused Columns
+## Resources
 
-- **Purpose:**
-  - Remove unnecessary columns that do not contribute to the analysis to optimize the dataset.
-
-- **Method:**
-  - Use the `ALTER TABLE` command to drop columns that are redundant or unused, such as `OwnerAddress`, `TaxDistrict`, and `SaleDate`.
-
-- **Note:**
-  - Cleaning up the dataset by removing unused columns makes the data easier to understand and work with.
-
-## Importing Data Using OPENROWSET and BULK INSERT
-
-- **Purpose:**
-  - Demonstrate advanced data import methods using `OPENROWSET` and `BULK INSERT` to bring data from external files into SQL Server.
-
-- **Method:**
-  - Configure the SQL Server appropriately to use these methods.
-  - Use `BULK INSERT` for importing CSV files directly.
-  - Use `OPENROWSET` to read data from external data sources, like Excel files.
-
-- **Note:**
-  - This step requires appropriate server configuration and is more suitable for advanced users who need to import large datasets efficiently.
+- [SQL Documentation](https://docs.microsoft.com/en-us/sql/)
+- [SQL Server Functions](https://docs.microsoft.com/en-us/sql/t-sql/functions/)
